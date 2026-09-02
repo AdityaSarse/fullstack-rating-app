@@ -1,5 +1,6 @@
 const { Router } = require("express");
 const { create, getAll, getById, update, remove } = require("../controllers/storeController");
+const { getStoreRatings } = require("../controllers/ratingController");
 const { authenticate } = require("../middlewares/authMiddleware");
 const { requireRole } = require("../middlewares/roleMiddleware");
 
@@ -10,6 +11,9 @@ router.get("/", getAll);
 
 // GET /api/stores/:id — public endpoint
 router.get("/:id", getById);
+
+// GET /api/stores/:storeId/ratings — public endpoint
+router.get("/:storeId/ratings", getStoreRatings);
 
 // POST /api/stores
 // ADMIN  → can create a store for any STORE_OWNER (ownerId required in body)

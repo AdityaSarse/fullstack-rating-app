@@ -6,6 +6,7 @@ const cors = require("cors");
 
 const authRoutes = require("./routes/authRoutes");
 const storeRoutes = require("./routes/storeRoutes");
+const ratingRoutes = require("./routes/ratingRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,6 +20,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/stores", storeRoutes);
+app.use("/api/ratings", ratingRoutes);
 
 // Health check — useful for verifying the server is running
 app.get("/health", (_req, res) => {
