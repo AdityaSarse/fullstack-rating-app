@@ -133,4 +133,213 @@ async function createStore({ name, email, address, requestingUser, ownerId: body
   return store;
 }
 
-module.exports = { createStore };
+// ── Get all stores (public) ───────────────────────────────────────────────────
+
+async function getAllStores() {
+  const stores = await prisma.store.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      address: true,
+      ratings: {
+        select: {
+          value: true,
+        },
+      },
+      _count: {
+        select: {
+          ratings: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return stores.map((store) => {
+    const ratingCount = store._count.ratings;
+    let averageRating = null;
+
+    if (ratingCount > 0) {
+      const sum = store.ratings.reduce((acc, curr) => acc + curr.value, 0);
+      averageRating = Number((sum / ratingCount).toFixed(1));
+    }
+
+    return {
+      id: store.id,
+      name: store.name,
+      email: store.email,
+      address: store.address,
+      averageRating,
+      ratingCount,
+    };
+  });
+}
+
+// ── Get store by ID (public) ──────────────────────────────────────────────────
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+async function getStoreById(storeId) {
+  if (!storeId || typeof storeId !== "string" || !UUID_REGEX.test(storeId.trim())) {
+    const error = new Error("Invalid store ID format.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const store = await prisma.store.findUnique({
+    where: { id: storeId.trim() },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      address: true,
+      ratings: {
+        select: {
+          value: true,
+        },
+      },
+      _count: {
+        select: {
+          ratings: true,
+        },
+      },
+    },
+  });
+
+  if (!store) {
+    const error = new Error("Store not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const ratingCount = store._count.ratings;
+  let averageRating = null;
+
+  if (ratingCount > 0) {
+    const sum = store.ratings.reduce((acc, curr) => acc + curr.value, 0);
+    averageRating = Number((sum / ratingCount).toFixed(1));
+  }
+
+  return {
+    id: store.id,
+    name: store.name,
+    email: store.email,
+    address: store.address,
+    averageRating,
+    ratingCount,
+  };
+}
+
+// ── Update store (ADMIN / STORE_OWNER) ────────────────────────────────────────
+
+async function updateStore({ storeId, name, email, address, requestingUser }) {
+  if (!storeId || typeof storeId !== "string" || !UUID_REGEX.test(storeId.trim())) {
+    const error = new Error("Invalid store ID format.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // 1. Validate fields to update
+  const validationErrors = validateStoreInput({ name, email, address });
+  if (validationErrors.length > 0) {
+    const error = new Error("Validation failed.");
+    error.statusCode = 422;
+    error.details = validationErrors;
+    throw error;
+  }
+
+  // 2. Check if store exists
+  const existingStore = await prisma.store.findUnique({
+    where: { id: storeId.trim() },
+    select: {
+      id: true,
+      ownerId: true,
+    },
+  });
+
+  if (!existingStore) {
+    const error = new Error("Store not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // 3. Resource ownership authorization:
+  //    STORE_OWNER can only update their own store. ADMIN can update any store.
+  if (requestingUser.role === "STORE_OWNER" && existingStore.ownerId !== requestingUser.id) {
+    const error = new Error("Forbidden. You do not have permission to update this store.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  // 4. Update the store (ownerId is never modified)
+  const updatedStore = await prisma.store.update({
+    where: { id: storeId.trim() },
+    data: {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      address: address.trim(),
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      address: true,
+      ownerId: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return updatedStore;
+}
+
+// ── Delete store (ADMIN / STORE_OWNER) ────────────────────────────────────────
+
+async function deleteStore({ storeId, requestingUser }) {
+  if (!storeId || typeof storeId !== "string" || !UUID_REGEX.test(storeId.trim())) {
+    const error = new Error("Invalid store ID format.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // 1. Check if store exists
+  const existingStore = await prisma.store.findUnique({
+    where: { id: storeId.trim() },
+    select: {
+      id: true,
+      name: true,
+      ownerId: true,
+    },
+  });
+
+  if (!existingStore) {
+    const error = new Error("Store not found.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // 2. Resource ownership authorization:
+  //    STORE_OWNER can only delete their own store. ADMIN can delete any store.
+  if (requestingUser.role === "STORE_OWNER" && existingStore.ownerId !== requestingUser.id) {
+    const error = new Error("Forbidden. You do not have permission to delete this store.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  // 3. Atomically remove associated ratings and the store
+  await prisma.$transaction([
+    prisma.rating.deleteMany({
+      where: { storeId: storeId.trim() },
+    }),
+    prisma.store.delete({
+      where: { id: storeId.trim() },
+    }),
+  ]);
+
+  return { id: existingStore.id, name: existingStore.name };
+}
+
+module.exports = { createStore, getAllStores, getStoreById, updateStore, deleteStore };
