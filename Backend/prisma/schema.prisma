@@ -1,0 +1,117 @@
+// ============================================================
+// prisma/schema.prisma
+// Database blueprint for the fullstack-rating-app
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// Enum: Role
+// A user can be ADMIN, USER, or STORE_OWNER.
+// Using an enum prevents invalid role strings from ever reaching
+// the database (e.g. "adminn", "superadmin", "owner123").
+// ============================================================
+enum Role {
+  ADMIN
+  USER
+  STORE_OWNER
+}
+
+// ============================================================
+// Model: User
+//
+// Single table for all roles. Role determines what a user can do
+// in the application — this satisfies the "single login system"
+// requirement from the challenge.
+//
+// Constraints enforced here:
+//   • email is UNIQUE (login identifier — must be unambiguous)
+//   • role uses the Role enum (no invalid strings)
+//
+// NOTE: name (20–60 chars) and address (max 400 chars) length
+// constraints are enforced at the API layer, not the DB layer,
+// because PostgreSQL has no built-in CHECK on varchar length via
+// Prisma schema syntax. We rely on Zod/express-validator on the
+// backend for that validation.
+// ============================================================
+model User {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(60)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   // bcrypt hash — NEVER store plaintext
+  address      String   @db.VarChar(400)
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  ratings      Rating[] // ratings this user has submitted
+  stores       Store[]  // stores this user owns (only applies when role = STORE_OWNER)
+
+  @@map("users")
+}
+
+// ============================================================
+// Model: Store
+//
+// A store is owned by a User whose role = STORE_OWNER.
+// We do NOT duplicate ownerName / ownerEmail / ownerAddress here —
+// those are available via the User relation (normalization).
+//
+// ownerId is a foreign key → User.id
+// ============================================================
+model Store {
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar(255)
+  email     String   @db.VarChar(255)
+  address   String   @db.VarChar(400)
+  ownerId   String   @unique // one Store Owner → exactly one Store
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  owner   User     @relation(fields: [ownerId], references: [id])
+  ratings Rating[]
+
+  @@map("stores")
+}
+
+// ============================================================
+// Model: Rating
+//
+// Connects a User to a Store with a numeric value 1–5.
+//
+// KEY CONSTRAINTS:
+//
+// 1. @@unique([userId, storeId])
+//    → One rating per user/store pair.
+//    → Allows safe upsert: update existing rating instead of inserting a new one.
+//    → Database rejects duplicates even if application code has a bug.
+//
+// 2. @db.SmallInt — value only needs to hold 1–5.
+//    Range (1–5) is validated at the API layer (backend validation).
+// ============================================================
+model Rating {
+  id        String   @id @default(uuid())
+  value     Int      @db.SmallInt // 1–5; validated at API layer
+  userId    String
+  storeId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id])
+  store Store @relation(fields: [storeId], references: [id])
+
+  // One rating per user/store pair — the most important constraint.
+  // This is what allows safe upsert ("update existing or create new").
+  @@unique([userId, storeId])
+
+  @@map("ratings")
+}

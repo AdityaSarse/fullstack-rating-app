@@ -23,3 +23,15 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+# AI / IDE tooling
+.agents/
+.claude/
+.cursor/
+.devin/
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
