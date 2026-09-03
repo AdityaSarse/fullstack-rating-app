@@ -1,13 +1,13 @@
 // src/services/api.js
 //
 // Centralized Axios instance for communication with the backend API.
-// Base URL is configured here so it is not hardcoded across components.
+// Base URL is loaded from environment variables (Vite import.meta.env.VITE_API_URL).
 // Automatically attaches Authorization: Bearer <token> if token exists in localStorage.
 
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -50,4 +50,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-
