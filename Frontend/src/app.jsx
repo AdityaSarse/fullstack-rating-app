@@ -12,6 +12,8 @@ import StoreDetailsPage from "./pages/StoreDetailsPage";
 import DashboardPage from "./pages/DashboardPage";
 import OwnerDashboardPage from "./pages/OwnerDashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminUsersPage from "./pages/AdminUsersPage";
+import AdminStoresPage from "./pages/AdminStoresPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const NavigationHeader = () => {
@@ -118,6 +120,22 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={["ADMIN"]}>
                   <AdminDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                  <AdminUsersPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/stores"
+              element={
+                <ProtectedRoute allowedRoles={["ADMIN"]}>
+                  <AdminStoresPage />
                 </ProtectedRoute>
               }
             />
