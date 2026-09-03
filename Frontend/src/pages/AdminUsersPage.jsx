@@ -1,7 +1,8 @@
 // src/pages/AdminUsersPage.jsx
-import React, { useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import api from "../services/api";
+import AdminLayout from "../components/AdminLayout";
+import RoleBadge from "../components/RoleBadge";
 
 const AdminUsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -10,7 +11,13 @@ const AdminUsersPage = () => {
   const [actionMessage, setActionMessage] = useState("");
   const [actionError, setActionError] = useState("");
 
-  // Edit User State
+  // Filter Row State
+  const [searchName, setSearchName] = useState("");
+  const [searchEmail, setSearchEmail] = useState("");
+  const [searchAddress, setSearchAddress] = useState("");
+  const [filterRole, setFilterRole] = useState("ALL");
+
+  // Edit User Modal State
   const [editingUser, setEditingUser] = useState(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -65,7 +72,6 @@ const AdminUsersPage = () => {
         address: editAddress.trim(),
       };
 
-      // Only include role if it's USER or STORE_OWNER (admin role can't be created via update)
       if (editRole !== editingUser.role) {
         payload.role = editRole;
       }
@@ -88,7 +94,7 @@ const AdminUsersPage = () => {
     setActionError("");
 
     const confirmed = window.confirm(
-      `Are you sure you want to delete user "${userToDelete.name}" (${userToDelete.email})?\n\nThis will permanently delete the user and any associated records.`
+      `Are you sure you want to delete user "${userToDelete.name}" (${userToDelete.email})?`
     );
 
     if (!confirmed) return;
@@ -106,264 +112,197 @@ const AdminUsersPage = () => {
     }
   };
 
-  const getRoleBadgeStyle = (role) => {
-    switch (role) {
-      case "ADMIN":
-        return { backgroundColor: "#f3e8ff", color: "#7e22ce", border: "1px solid #d8b4fe" };
-      case "STORE_OWNER":
-        return { backgroundColor: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd" };
-      case "USER":
-      default:
-        return { backgroundColor: "#f1f5f9", color: "#334155", border: "1px solid #cbd5e1" };
-    }
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const matchesName =
+        !searchName.trim() ||
+        u.name.toLowerCase().includes(searchName.toLowerCase());
+      const matchesEmail =
+        !searchEmail.trim() ||
+        u.email.toLowerCase().includes(searchEmail.toLowerCase());
+      const matchesAddress =
+        !searchAddress.trim() ||
+        (u.address && u.address.toLowerCase().includes(searchAddress.toLowerCase()));
+      const matchesRole =
+        filterRole === "ALL" || u.role === filterRole;
+
+      return matchesName && matchesEmail && matchesAddress && matchesRole;
+    });
+  }, [users, searchName, searchEmail, searchAddress, filterRole]);
+
+  const hasActiveFilters =
+    searchName || searchEmail || searchAddress || filterRole !== "ALL";
+
+  const clearFilters = () => {
+    setSearchName("");
+    setSearchEmail("");
+    setSearchAddress("");
+    setFilterRole("ALL");
   };
 
   return (
-    <div style={{ maxWidth: "1050px", margin: "2rem auto", padding: "0 1.5rem" }}>
-      <Link to="/admin" style={{ display: "inline-block", marginBottom: "1rem", fontSize: "0.9rem" }}>
-        ← Back to Admin Dashboard
-      </Link>
+    <AdminLayout>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 bg-white border-4 border-black p-6 shadow-[6px_6px_0px_0px_#000]">
+        <div>
+          <div className="inline-block px-2.5 py-0.5 bg-neo-accent text-white border-2 border-black font-black text-xs uppercase tracking-wider shadow-[2px_2px_0px_0px_#000] -rotate-1 mb-2">
+            ACCOUNTS CONTROL
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
+            User Management
+          </h1>
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-black/70 mt-0.5">
+            Total registered accounts: <span className="font-black tabular-nums">{users.length}</span>
+          </p>
+        </div>
+      </div>
 
-      <div
-        style={{
-          backgroundColor: "#fff",
-          border: "1px solid #e2e8f0",
-          borderRadius: "8px",
-          padding: "1.75rem",
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem", flexWrap: "wrap", gap: "0.5rem" }}>
+      {/* Global Notifications */}
+      {actionMessage && (
+        <div className="mb-6 p-4 bg-neo-secondary border-4 border-black text-black font-black text-sm uppercase tracking-wider shadow-[6px_6px_0px_0px_#000]">
+          ✓ {actionMessage}
+        </div>
+      )}
+
+      {actionError && (
+        <div className="mb-6 p-4 bg-neo-accent border-4 border-black text-white font-bold text-sm uppercase tracking-wider shadow-[6px_6px_0px_0px_#000]">
+          ⚠ {actionError}
+        </div>
+      )}
+
+      {/* Filter Row directly above table */}
+      <div className="bg-white border-4 border-black p-5 mb-8 shadow-[6px_6px_0px_0px_#000]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <h1 style={{ fontSize: "1.5rem", color: "#0f172a", marginBottom: "0.25rem" }}>
-              User Management
-            </h1>
-            <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
-              Total registered users: {users.length}
-            </p>
+            <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
+              Filter By Name
+            </label>
+            <input
+              type="text"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              placeholder="SEARCH NAME..."
+              className="w-full px-3 py-2 text-xs font-bold uppercase tracking-wider border-3 border-black bg-neo-bg text-black placeholder:text-black/40 focus:bg-neo-secondary focus:shadow-[3px_3px_0px_0px_#000] focus:outline-none transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
+              Filter By Email
+            </label>
+            <input
+              type="text"
+              value={searchEmail}
+              onChange={(e) => setSearchEmail(e.target.value)}
+              placeholder="SEARCH EMAIL..."
+              className="w-full px-3 py-2 text-xs font-bold uppercase tracking-wider border-3 border-black bg-neo-bg text-black placeholder:text-black/40 focus:bg-neo-secondary focus:shadow-[3px_3px_0px_0px_#000] focus:outline-none transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
+              Filter By Address
+            </label>
+            <input
+              type="text"
+              value={searchAddress}
+              onChange={(e) => setSearchAddress(e.target.value)}
+              placeholder="SEARCH ADDRESS..."
+              className="w-full px-3 py-2 text-xs font-bold uppercase tracking-wider border-3 border-black bg-neo-bg text-black placeholder:text-black/40 focus:bg-neo-secondary focus:shadow-[3px_3px_0px_0px_#000] focus:outline-none transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
+              Filter By Role
+            </label>
+            <select
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value)}
+              className="w-full px-3 py-2 text-xs font-bold uppercase tracking-wider border-3 border-black bg-neo-bg text-black focus:bg-neo-secondary focus:shadow-[3px_3px_0px_0px_#000] focus:outline-none transition-all"
+            >
+              <option value="ALL">ALL ROLES</option>
+              <option value="USER">NORMAL USER</option>
+              <option value="STORE_OWNER">STORE OWNER</option>
+              <option value="ADMIN">ADMINISTRATOR</option>
+            </select>
           </div>
         </div>
+      </div>
 
-        {/* Global Notifications */}
-        {actionMessage && (
-          <div style={{ padding: "0.85rem 1rem", marginBottom: "1.25rem", backgroundColor: "#dcfce7", color: "#166534", borderRadius: "6px" }}>
-            {actionMessage}
-          </div>
-        )}
-
-        {actionError && (
-          <div style={{ padding: "0.85rem 1rem", marginBottom: "1.25rem", backgroundColor: "#fee2e2", color: "#991b1b", borderRadius: "6px" }}>
-            {actionError}
-          </div>
-        )}
-
-        {/* Edit User Modal / Form */}
-        {editingUser && (
-          <div
-            style={{
-              backgroundColor: "#f8fafc",
-              border: "1px solid #cbd5e1",
-              borderRadius: "8px",
-              padding: "1.5rem",
-              marginBottom: "1.75rem",
-            }}
-          >
-            <h2 style={{ fontSize: "1.2rem", color: "#0f172a", marginBottom: "1rem" }}>
-              Edit User: <span style={{ color: "#2563eb" }}>{editingUser.name}</span>
-            </h2>
-
-            <form onSubmit={handleSaveEdit}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1rem", marginBottom: "1rem" }}>
-                <div>
-                  <label style={{ display: "block", marginBottom: "0.3rem", fontWeight: "500", fontSize: "0.9rem" }}>
-                    Full Name (20–60 characters)
-                  </label>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #cbd5e1", borderRadius: "4px" }}
-                    disabled={saving}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: "block", marginBottom: "0.3rem", fontWeight: "500", fontSize: "0.9rem" }}>
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
-                    style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #cbd5e1", borderRadius: "4px" }}
-                    disabled={saving}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: "block", marginBottom: "0.3rem", fontWeight: "500", fontSize: "0.9rem" }}>
-                    User Role
-                  </label>
-                  {editingUser.role === "ADMIN" ? (
-                    <input
-                      type="text"
-                      value="ADMIN (Role cannot be changed)"
-                      disabled
-                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #cbd5e1", borderRadius: "4px", backgroundColor: "#f1f5f9", color: "#64748b" }}
-                    />
-                  ) : (
-                    <select
-                      value={editRole}
-                      onChange={(e) => setEditRole(e.target.value)}
-                      disabled={saving}
-                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #cbd5e1", borderRadius: "4px", backgroundColor: "#fff" }}
-                    >
-                      <option value="USER">USER</option>
-                      <option value="STORE_OWNER">STORE_OWNER</option>
-                    </select>
-                  )}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: "1.25rem" }}>
-                <label style={{ display: "block", marginBottom: "0.3rem", fontWeight: "500", fontSize: "0.9rem" }}>
-                  Address
-                </label>
-                <textarea
-                  value={editAddress}
-                  onChange={(e) => setEditAddress(e.target.value)}
-                  rows={2}
-                  style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #cbd5e1", borderRadius: "4px", resize: "vertical" }}
-                  disabled={saving}
-                  required
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "0.75rem" }}>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    padding: "0.5rem 1.25rem",
-                    backgroundColor: "#2563eb",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    fontWeight: "600",
-                    cursor: saving ? "not-allowed" : "pointer",
-                  }}
-                >
-                  {saving ? "Saving..." : "Save User"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  disabled={saving}
-                  style={{
-                    padding: "0.5rem 1.25rem",
-                    backgroundColor: "#94a3b8",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    fontWeight: "600",
-                    cursor: "pointer",
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
+      {/* Users Table */}
+      <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] overflow-hidden">
         {loading && (
-          <div style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
-            Loading users list...
+          <div className="text-center py-20 font-black text-sm uppercase tracking-widest text-black">
+            ⏳ LOADING USERS DIRECTORY...
           </div>
         )}
 
         {error && (
-          <div style={{ padding: "1rem", marginBottom: "1rem", backgroundColor: "#fee2e2", color: "#991b1b", borderRadius: "6px" }}>
-            {error}
+          <div className="p-6 text-neo-accent font-bold text-sm uppercase">
+            ⚠ {error}
           </div>
         )}
 
-        {!loading && !error && users.length === 0 && (
-          <div style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
-            No users found.
+        {!loading && !error && filteredUsers.length === 0 && (
+          <div className="p-12 text-center">
+            <p className="text-lg font-black uppercase tracking-tight text-black mb-1">
+              No users match your filters.
+            </p>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="btn-neo mt-2 px-3 py-1 bg-neo-secondary border-2 border-black font-black text-xs uppercase tracking-wider shadow-[2px_2px_0px_0px_#000]"
+              >
+                Clear all filters
+              </button>
+            )}
           </div>
         )}
 
-        {!loading && !error && users.length > 0 && (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.95rem" }}>
+        {!loading && !error && filteredUsers.length > 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr style={{ backgroundColor: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
-                  <th style={{ padding: "0.75rem 1rem", fontWeight: "600", color: "#475569" }}>Name</th>
-                  <th style={{ padding: "0.75rem 1rem", fontWeight: "600", color: "#475569" }}>Email</th>
-                  <th style={{ padding: "0.75rem 1rem", fontWeight: "600", color: "#475569" }}>Role</th>
-                  <th style={{ padding: "0.75rem 1rem", fontWeight: "600", color: "#475569" }}>Registered</th>
-                  <th style={{ padding: "0.75rem 1rem", fontWeight: "600", color: "#475569", textAlign: "right" }}>Actions</th>
+                <tr className="bg-neo-secondary border-b-4 border-black text-xs font-black uppercase tracking-wider text-black">
+                  <th className="py-3.5 px-4">Name</th>
+                  <th className="py-3.5 px-4">Email</th>
+                  <th className="py-3.5 px-4">Address</th>
+                  <th className="py-3.5 px-4">Role</th>
+                  <th className="py-3.5 px-4">Registered</th>
+                  <th className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                    <td style={{ padding: "0.85rem 1rem", fontWeight: "500", color: "#0f172a" }}>
+              <tbody className="divide-y-2 divide-black text-sm font-bold bg-white">
+                {filteredUsers.map((u) => (
+                  <tr key={u.id} className="hover:bg-neo-bg h-14 transition-colors">
+                    <td className="py-3 px-4 font-black uppercase text-black whitespace-nowrap">
                       {u.name}
                     </td>
-                    <td style={{ padding: "0.85rem 1rem", color: "#334155" }}>
+                    <td className="py-3 px-4 text-black/80 whitespace-nowrap">
                       {u.email}
                     </td>
-                    <td style={{ padding: "0.85rem 1rem" }}>
-                      <span
-                        style={{
-                          display: "inline-block",
-                          padding: "0.2rem 0.55rem",
-                          borderRadius: "4px",
-                          fontSize: "0.8rem",
-                          fontWeight: "600",
-                          ...getRoleBadgeStyle(u.role),
-                        }}
-                      >
-                        {u.role}
-                      </span>
+                    <td className="py-3 px-4 text-black/80 max-w-xs truncate" title={u.address}>
+                      {u.address}
                     </td>
-                    <td style={{ padding: "0.85rem 1rem", color: "#64748b", fontSize: "0.85rem" }}>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <RoleBadge role={u.role} />
+                    </td>
+                    <td className="py-3 px-4 text-xs font-bold uppercase text-black/60 whitespace-nowrap">
                       {new Date(u.createdAt).toLocaleDateString()}
                     </td>
-                    <td style={{ padding: "0.85rem 1rem", textAlign: "right" }}>
-                      <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                    <td className="py-3 px-4 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center gap-2">
                         <button
                           onClick={() => handleStartEdit(u)}
-                          style={{
-                            padding: "0.35rem 0.75rem",
-                            backgroundColor: "#f1f5f9",
-                            color: "#0369a1",
-                            border: "1px solid #bae6fd",
-                            borderRadius: "4px",
-                            fontSize: "0.85rem",
-                            fontWeight: "500",
-                            cursor: "pointer",
-                          }}
+                          className="btn-neo px-3 py-1 text-xs font-black uppercase tracking-wider text-black bg-white border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:bg-neo-secondary"
                         >
                           Edit
                         </button>
                         {u.role !== "ADMIN" && (
                           <button
                             onClick={() => handleDeleteUser(u)}
-                            style={{
-                              padding: "0.35rem 0.75rem",
-                              backgroundColor: "#fee2e2",
-                              color: "#991b1b",
-                              border: "1px solid #fecaca",
-                              borderRadius: "4px",
-                              fontSize: "0.85rem",
-                              fontWeight: "500",
-                              cursor: "pointer",
-                            }}
+                            className="btn-neo px-3 py-1 text-xs font-black uppercase tracking-wider text-white bg-neo-accent border-2 border-black shadow-[2px_2px_0px_0px_#000]"
                           >
                             Delete
                           </button>
@@ -377,7 +316,119 @@ const AdminUsersPage = () => {
           </div>
         )}
       </div>
-    </div>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white border-4 border-black max-w-[500px] w-full p-6 sm:p-8 shadow-[12px_12px_0px_0px_#000]">
+            <div className="flex items-center justify-between mb-6 border-b-4 border-black pb-3">
+              <h2 className="text-xl font-black uppercase tracking-tight text-black">
+                Edit User Account
+              </h2>
+              <button
+                onClick={handleCancelEdit}
+                className="btn-neo px-2 py-1 font-black text-sm uppercase text-black hover:bg-neo-secondary"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {actionError && (
+              <div className="mb-4 p-3 bg-neo-accent border-3 border-black text-white font-bold text-xs uppercase tracking-wider shadow-[3px_3px_0px_0px_#000]">
+                ⚠ {actionError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                  Full Name (20–60 chars)
+                </label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  required
+                  disabled={saving}
+                  className="w-full px-3 py-2 border-4 border-black text-sm font-bold text-black bg-white focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  required
+                  disabled={saving}
+                  className="w-full px-3 py-2 border-4 border-black text-sm font-bold text-black bg-white focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                  Role
+                </label>
+                {editingUser.role === "ADMIN" ? (
+                  <input
+                    type="text"
+                    value="ADMIN (System Administrator - Fixed)"
+                    disabled
+                    className="w-full px-3 py-2 border-4 border-black text-sm font-bold bg-neo-bg text-black/50 cursor-not-allowed uppercase"
+                  />
+                ) : (
+                  <select
+                    value={editRole}
+                    onChange={(e) => setEditRole(e.target.value)}
+                    disabled={saving}
+                    className="w-full px-3 py-2 border-4 border-black text-sm font-bold text-black bg-white focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all"
+                  >
+                    <option value="USER">NORMAL USER</option>
+                    <option value="STORE_OWNER">STORE OWNER</option>
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                  Address
+                </label>
+                <textarea
+                  value={editAddress}
+                  onChange={(e) => setEditAddress(e.target.value)}
+                  rows={2}
+                  required
+                  disabled={saving}
+                  className="w-full px-3 py-2 border-4 border-black text-sm font-bold text-black bg-white focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all resize-none"
+                />
+              </div>
+
+              <div className="pt-4 border-t-4 border-black flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  disabled={saving}
+                  className="btn-neo px-4 py-2 bg-white border-2 border-black font-black text-xs uppercase tracking-wider hover:bg-neo-muted shadow-[2px_2px_0px_0px_#000]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="btn-neo px-5 py-2 bg-neo-accent text-white font-black text-xs uppercase tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000] focus:outline-none disabled:opacity-40"
+                >
+                  {saving ? "SAVING..." : "SAVE CHANGES ★"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </AdminLayout>
   );
 };
 

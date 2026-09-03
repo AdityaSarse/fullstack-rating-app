@@ -3,6 +3,9 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import AppNavbar from "../components/AppNavbar";
+import StarRating from "../components/StarRating";
+import RoleBadge from "../components/RoleBadge";
 
 const OwnerDashboardPage = () => {
   const { user, logout } = useAuth();
@@ -14,14 +17,22 @@ const OwnerDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Edit store state
+  // Create store state (for owners with no store)
+  const [isCreating, setIsCreating] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createEmail, setCreateEmail] = useState("");
+  const [createAddress, setCreateAddress] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+
+  // Edit store state (for owners with existing store)
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editAddress, setEditAddress] = useState("");
   const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState("");
-  const [saveError, setSaveError] = useState("");
+  const [actionSuccess, setActionSuccess] = useState("");
+  const [editError, setEditError] = useState("");
 
   const fetchOwnerData = useCallback(async () => {
     try {
@@ -46,7 +57,6 @@ const OwnerDashboardPage = () => {
         setEditEmail(myStore.email);
         setEditAddress(myStore.address);
 
-        // Fetch detailed customer ratings list for this store
         try {
           const ratingsRes = await api.get(`/stores/${myStore.id}/ratings`);
           setStoreRatings(ratingsRes.data?.data?.ratings || []);
@@ -76,30 +86,79 @@ const OwnerDashboardPage = () => {
     navigate("/login");
   };
 
+  // Create store handlers
+  const handleStartCreate = () => {
+    setCreateName("");
+    setCreateEmail(profile?.email || "");
+    setCreateAddress(profile?.address || "");
+    setCreateError("");
+    setActionSuccess("");
+    setIsCreating(true);
+  };
+
+  const handleCancelCreate = () => {
+    setIsCreating(false);
+    setCreateError("");
+  };
+
+  const handleCreateStore = async (e) => {
+    e.preventDefault();
+    setCreateError("");
+    setActionSuccess("");
+
+    if (!createName.trim() || !createEmail.trim() || !createAddress.trim()) {
+      setCreateError("All fields (name, email, and address) are required.");
+      return;
+    }
+
+    setCreating(true);
+
+    try {
+      const response = await api.post("/stores", {
+        name: createName.trim(),
+        email: createEmail.trim(),
+        address: createAddress.trim(),
+      });
+
+      setActionSuccess(
+        response.data?.message || "Store created successfully!"
+      );
+      setIsCreating(false);
+      await fetchOwnerData();
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.message ||
+        "Failed to create store. Please check the details and try again.";
+      setCreateError(errorMsg);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  // Edit store handlers
   const handleStartEdit = () => {
     if (ownerStore) {
       setEditName(ownerStore.name);
       setEditEmail(ownerStore.email);
       setEditAddress(ownerStore.address);
-      setSaveSuccess("");
-      setSaveError("");
+      setActionSuccess("");
+      setEditError("");
       setIsEditing(true);
     }
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setSaveSuccess("");
-    setSaveError("");
+    setEditError("");
   };
 
   const handleSaveStore = async (e) => {
     e.preventDefault();
-    setSaveSuccess("");
-    setSaveError("");
+    setActionSuccess("");
+    setEditError("");
 
     if (!editName.trim() || !editEmail.trim() || !editAddress.trim()) {
-      setSaveError("All fields are required.");
+      setEditError("All fields are required.");
       return;
     }
 
@@ -112,360 +171,375 @@ const OwnerDashboardPage = () => {
         address: editAddress.trim(),
       });
 
-      setSaveSuccess(response.data.message || "Store updated successfully!");
+      setActionSuccess(response.data?.message || "Store updated successfully!");
       setIsEditing(false);
       await fetchOwnerData();
     } catch (err) {
       const errorMsg =
         err.response?.data?.message || "Failed to update store. Please try again.";
-      setSaveError(errorMsg);
+      setEditError(errorMsg);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: "850px", margin: "2rem auto", padding: "0 1.5rem" }}>
-      {/* Header Banner */}
-      <div
-        style={{
-          backgroundColor: "#fff",
-          border: "1px solid #e2e8f0",
-          borderRadius: "8px",
-          padding: "1.5rem",
-          marginBottom: "2rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "1rem",
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: "1.5rem", color: "#0f172a", marginBottom: "0.25rem" }}>
-            Store Owner Dashboard
-          </h1>
-          <p style={{ color: "#64748b", fontSize: "0.95rem" }}>
-            {profile?.name ? `Owner: ${profile.name} • ` : ""}
-            {profile?.email ? `Email: ${profile.email} • ` : ""}
-            Role: <span style={{ fontWeight: "600", color: "#0284c7" }}>STORE_OWNER</span>
-          </p>
-        </div>
+    <div className="min-h-screen flex flex-col bg-neo-bg bg-grid-pattern text-black">
+      <AppNavbar />
 
-        <button
-          onClick={handleLogout}
-          style={{
-            padding: "0.5rem 1rem",
-            backgroundColor: "#ef4444",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-        >
-          Logout
-        </button>
-      </div>
-
-      {loading && (
-        <div style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
-          Loading store details...
-        </div>
-      )}
-
-      {error && (
-        <div
-          style={{
-            padding: "1rem",
-            marginBottom: "1.5rem",
-            backgroundColor: "#fee2e2",
-            color: "#991b1b",
-            borderRadius: "6px",
-          }}
-        >
-          {error}
-        </div>
-      )}
-
-      {saveSuccess && (
-        <div
-          style={{
-            padding: "1rem",
-            marginBottom: "1.5rem",
-            backgroundColor: "#dcfce7",
-            color: "#166534",
-            borderRadius: "6px",
-          }}
-        >
-          {saveSuccess}
-        </div>
-      )}
-
-      {!loading && !error && !ownerStore && (
-        <div
-          style={{
-            backgroundColor: "#fff",
-            border: "1px dashed #cbd5e1",
-            borderRadius: "8px",
-            padding: "3rem",
-            textAlign: "center",
-            color: "#64748b",
-          }}
-        >
-          <h3 style={{ fontSize: "1.2rem", color: "#334155", marginBottom: "0.5rem" }}>
-            No Store Found
-          </h3>
-          <p>You have not registered or been assigned a store yet.</p>
-        </div>
-      )}
-
-      {!loading && ownerStore && (
-        <div>
-          {/* My Store Section */}
-          <div style={{ marginBottom: "1rem" }}>
-            <h2 style={{ fontSize: "1.3rem", color: "#0f172a" }}>My Store</h2>
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-8 py-10">
+        {/* Header Banner */}
+        <div className="bg-white border-4 border-black p-6 sm:p-8 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-[8px_8px_0px_0px_#000]">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
+                Store Owner Portal
+              </h1>
+              <RoleBadge role="STORE_OWNER" rotate />
+            </div>
+            <p className="text-xs sm:text-sm font-bold text-black/70">
+              {profile?.name ? `${profile.name} • ` : ""}
+              {profile?.email || ""}
+            </p>
           </div>
 
-          <div
-            style={{
-              backgroundColor: "#fff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              padding: "1.75rem",
-              marginBottom: "2rem",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-            }}
+          <button
+            onClick={handleLogout}
+            className="btn-neo self-start sm:self-auto px-4 py-2.5 bg-neo-accent text-white font-black text-xs uppercase tracking-wider border-2 border-black shadow-[3px_3px_0px_0px_#000] focus:outline-none"
           >
-            {isEditing ? (
-              <div>
-                <h3 style={{ fontSize: "1.2rem", color: "#0f172a", marginBottom: "1.25rem" }}>
-                  Edit Store Details
-                </h3>
+            Logout
+          </button>
+        </div>
 
-                {saveError && (
-                  <div
-                    style={{
-                      padding: "0.75rem",
-                      marginBottom: "1rem",
-                      backgroundColor: "#fee2e2",
-                      color: "#991b1b",
-                      borderRadius: "4px",
-                    }}
+        {/* Global Loading State */}
+        {loading && (
+          <div className="text-center py-20 font-black text-sm uppercase tracking-widest text-black">
+            ⏳ LOADING STORE METRICS...
+          </div>
+        )}
+
+        {/* Global Error State */}
+        {error && (
+          <div className="mb-6 p-4 bg-neo-accent border-4 border-black text-white font-bold text-sm uppercase tracking-wider shadow-[6px_6px_0px_0px_#000]">
+            ⚠ {error}
+          </div>
+        )}
+
+        {/* Success Alert */}
+        {actionSuccess && (
+          <div className="mb-6 p-4 bg-neo-secondary border-4 border-black text-black font-black text-sm uppercase tracking-wider shadow-[6px_6px_0px_0px_#000]">
+            ✓ {actionSuccess}
+          </div>
+        )}
+
+        {/* Phase 12.5: No Store Flow & Create Store Form */}
+        {!loading && !ownerStore && (
+          <div className="bg-white border-4 border-black p-6 sm:p-10 shadow-[8px_8px_0px_0px_#000]">
+            {!isCreating ? (
+              <div className="text-center py-6">
+                <div className="text-5xl mb-4">🏪</div>
+                <h2 className="text-2xl font-black uppercase tracking-tight text-black mb-2">
+                  No store found
+                </h2>
+                <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-black/60 max-w-md mx-auto mb-8">
+                  Create your store to start receiving ratings.
+                </p>
+                <button
+                  onClick={handleStartCreate}
+                  className="btn-neo inline-flex items-center gap-2 px-6 py-3.5 bg-neo-secondary text-black font-black text-xs sm:text-sm uppercase tracking-wider border-4 border-black shadow-[6px_6px_0px_0px_#000] hover:bg-neo-secondary"
+                >
+                  <span>★</span>
+                  <span>CREATE STORE</span>
+                  <span>→</span>
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center justify-between mb-6 border-b-4 border-black pb-3">
+                  <div>
+                    <div className="inline-block px-2.5 py-0.5 bg-neo-secondary border-2 border-black font-black text-xs uppercase tracking-wider shadow-[2px_2px_0px_0px_#000] -rotate-1 mb-1">
+                      FIRST STORE SETUP
+                    </div>
+                    <h2 className="text-2xl font-black uppercase tracking-tight text-black">
+                      Create Your Store
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCancelCreate}
+                    className="btn-neo px-2 py-1 text-xs font-black uppercase text-black hover:bg-neo-secondary"
                   >
-                    {saveError}
+                    ✕ Cancel
+                  </button>
+                </div>
+
+                {createError && (
+                  <div className="mb-6 p-3 bg-neo-accent border-3 border-black text-white font-bold text-xs uppercase tracking-wider shadow-[3px_3px_0px_0px_#000]">
+                    ⚠ {createError}
                   </div>
                 )}
 
-                <form onSubmit={handleSaveStore}>
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label style={{ display: "block", marginBottom: "0.4rem", fontWeight: "500" }}>
+                <form onSubmit={handleCreateStore} className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
                       Store Name
                     </label>
                     <input
                       type="text"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #cbd5e1", borderRadius: "4px" }}
-                      disabled={saving}
+                      value={createName}
+                      onChange={(e) => setCreateName(e.target.value)}
+                      placeholder="e.g. Apex Electronics & Gadgets"
                       required
+                      disabled={creating}
+                      className="w-full px-3 py-2.5 border-4 border-black text-sm font-bold text-black bg-white placeholder:text-black/40 focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all"
                     />
                   </div>
 
-                  <div style={{ marginBottom: "1rem" }}>
-                    <label style={{ display: "block", marginBottom: "0.4rem", fontWeight: "500" }}>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
                       Store Email
                     </label>
                     <input
                       type="email"
-                      value={editEmail}
-                      onChange={(e) => setEditEmail(e.target.value)}
-                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #cbd5e1", borderRadius: "4px" }}
-                      disabled={saving}
+                      value={createEmail}
+                      onChange={(e) => setCreateEmail(e.target.value)}
+                      placeholder="e.g. contact@apexstore.com"
                       required
+                      disabled={creating}
+                      className="w-full px-3 py-2.5 border-4 border-black text-sm font-bold text-black bg-white placeholder:text-black/40 focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all"
                     />
                   </div>
 
-                  <div style={{ marginBottom: "1.5rem" }}>
-                    <label style={{ display: "block", marginBottom: "0.4rem", fontWeight: "500" }}>
+                  <div>
+                    <label className="block text-xs font-black uppercase tracking-wider text-black mb-1.5">
                       Store Address
                     </label>
                     <textarea
-                      value={editAddress}
-                      onChange={(e) => setEditAddress(e.target.value)}
+                      value={createAddress}
+                      onChange={(e) => setCreateAddress(e.target.value)}
+                      placeholder="e.g. Shop 42, Phoenix Mall, Viman Nagar, Pune, Maharashtra"
                       rows={3}
-                      style={{ width: "100%", padding: "0.5rem 0.75rem", border: "1px solid #cbd5e1", borderRadius: "4px", resize: "vertical" }}
-                      disabled={saving}
                       required
+                      disabled={creating}
+                      className="w-full px-3 py-2.5 border-4 border-black text-sm font-bold text-black bg-white placeholder:text-black/40 focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all resize-none"
                     />
                   </div>
 
-                  <div style={{ display: "flex", gap: "0.75rem" }}>
+                  <div className="flex items-center gap-3 pt-3 border-t-4 border-black">
                     <button
                       type="submit"
-                      disabled={saving}
-                      style={{
-                        padding: "0.6rem 1.25rem",
-                        backgroundColor: "#2563eb",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "4px",
-                        fontWeight: "600",
-                        cursor: saving ? "not-allowed" : "pointer",
-                      }}
+                      disabled={creating}
+                      className="btn-neo px-6 py-3 bg-neo-accent text-white font-black text-xs uppercase tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000] focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      {saving ? "Saving Changes..." : "Save Changes"}
+                      {creating ? "CREATING STORE..." : "CREATE STORE ★"}
                     </button>
-
                     <button
                       type="button"
-                      onClick={handleCancelEdit}
-                      disabled={saving}
-                      style={{
-                        padding: "0.6rem 1.25rem",
-                        backgroundColor: "#94a3b8",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: "4px",
-                        fontWeight: "600",
-                        cursor: "pointer",
-                      }}
+                      onClick={handleCancelCreate}
+                      disabled={creating}
+                      className="btn-neo px-4 py-2.5 bg-white border-2 border-black font-black text-xs uppercase tracking-wider hover:bg-neo-muted shadow-[2px_2px_0px_0px_#000]"
                     >
                       Cancel
                     </button>
                   </div>
                 </form>
               </div>
-            ) : (
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
-                  <div>
-                    <h3 style={{ fontSize: "1.5rem", color: "#0f172a", marginBottom: "0.5rem" }}>
-                      {ownerStore.name}
-                    </h3>
-                    <p style={{ color: "#475569", marginBottom: "0.25rem" }}>
-                      ✉️ {ownerStore.email}
-                    </p>
-                    <p style={{ color: "#475569" }}>
-                      📍 {ownerStore.address}
-                    </p>
+            )}
+          </div>
+        )}
+
+        {/* Store Dashboard Content (When store exists) */}
+        {!loading && ownerStore && (
+          <div className="space-y-8">
+            {/* Massive Aggregate Rating Display */}
+            <div className="bg-neo-secondary border-4 border-black p-8 text-center shadow-[8px_8px_0px_0px_#000] rotate-[-0.5deg]">
+              <div className="text-xs font-black uppercase tracking-widest text-black/80 mb-2">
+                OVERALL STORE RATING
+              </div>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-black text-5xl font-black">★</span>
+                <span className="text-5xl sm:text-6xl font-black text-black tabular-nums">
+                  {ownerStore.averageRating !== null
+                    ? Number(ownerStore.averageRating).toFixed(1)
+                    : "—"}
+                </span>
+              </div>
+              <div className="text-xs sm:text-sm font-black uppercase tracking-wider text-black tabular-nums">
+                {ownerStore.averageRating !== null
+                  ? `BASED ON ${ownerStore.ratingCount} ${ownerStore.ratingCount === 1 ? "CUSTOMER REVIEW" : "CUSTOMER REVIEWS"}`
+                  : "NO RATINGS SUBMITTED YET"}
+              </div>
+            </div>
+
+            {/* Store Information & Edit Section */}
+            <div className="bg-white border-4 border-black p-6 sm:p-8 shadow-[8px_8px_0px_0px_#000]">
+              {isEditing ? (
+                <div>
+                  <div className="flex items-center justify-between mb-6 border-b-4 border-black pb-3">
+                    <h2 className="text-xl font-black uppercase tracking-tight text-black">
+                      Edit Store Information
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="btn-neo px-2 py-1 text-xs font-black uppercase text-black hover:bg-neo-secondary"
+                    >
+                      ✕ Cancel
+                    </button>
                   </div>
 
-                  <div
-                    style={{
-                      backgroundColor: "#f8fafc",
-                      border: "1px solid #e2e8f0",
-                      padding: "1rem 1.5rem",
-                      borderRadius: "8px",
-                      textAlign: "center",
-                      minWidth: "160px",
-                    }}
-                  >
-                    <div style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "0.25rem", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "600" }}>
-                      Rating Summary
+                  {editError && (
+                    <div className="mb-4 p-3 bg-neo-accent border-3 border-black text-white font-bold text-xs uppercase tracking-wider shadow-[3px_3px_0px_0px_#000]">
+                      ⚠ {editError}
                     </div>
-                    {ownerStore.averageRating !== null ? (
-                      <>
-                        <div style={{ fontSize: "1.75rem", fontWeight: "bold", color: "#d97706" }}>
-                          ⭐ {ownerStore.averageRating}
-                        </div>
-                        <div style={{ fontSize: "0.85rem", color: "#64748b" }}>
-                          {ownerStore.ratingCount} {ownerStore.ratingCount === 1 ? "rating" : "ratings"}
-                        </div>
-                      </>
-                    ) : (
-                      <div style={{ fontSize: "0.95rem", color: "#94a3b8", fontStyle: "italic", marginTop: "0.5rem" }}>
-                        No ratings yet
+                  )}
+
+                  <form onSubmit={handleSaveStore} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                        Store Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        required
+                        disabled={saving}
+                        className="w-full px-3 py-2 border-4 border-black text-sm font-bold text-black bg-white focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                        Store Email
+                      </label>
+                      <input
+                        type="email"
+                        value={editEmail}
+                        onChange={(e) => setEditEmail(e.target.value)}
+                        required
+                        disabled={saving}
+                        className="w-full px-3 py-2 border-4 border-black text-sm font-bold text-black bg-white focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-black uppercase tracking-wider text-black mb-1">
+                        Store Address
+                      </label>
+                      <textarea
+                        value={editAddress}
+                        onChange={(e) => setEditAddress(e.target.value)}
+                        rows={3}
+                        required
+                        disabled={saving}
+                        className="w-full px-3 py-2 border-4 border-black text-sm font-bold text-black bg-white focus:bg-neo-secondary focus:shadow-[4px_4px_0px_0px_#000] focus:outline-none transition-all resize-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-2">
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className="btn-neo px-5 py-2.5 bg-neo-accent text-white font-black text-xs uppercase tracking-wider border-4 border-black shadow-[4px_4px_0px_0px_#000] focus:outline-none disabled:opacity-40"
+                      >
+                        {saving ? "SAVING CHANGES..." : "SAVE STORE PROFILE"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        disabled={saving}
+                        className="btn-neo px-4 py-2 bg-white border-2 border-black font-black text-xs uppercase tracking-wider hover:bg-neo-muted shadow-[2px_2px_0px_0px_#000]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="inline-block px-2.5 py-0.5 bg-neo-muted border-2 border-black font-black text-xs uppercase tracking-wider shadow-[2px_2px_0px_0px_#000] -rotate-1 mb-2">
+                        STORE PROFILE
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "1.25rem", display: "flex", gap: "1rem" }}>
-                  <button
-                    onClick={handleStartEdit}
-                    style={{
-                      padding: "0.6rem 1.2rem",
-                      backgroundColor: "#0284c7",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "4px",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                    }}
-                  >
-                    Edit Store
-                  </button>
-
-                  <Link
-                    to={`/stores/${ownerStore.id}`}
-                    style={{
-                      display: "inline-block",
-                      padding: "0.6rem 1.2rem",
-                      backgroundColor: "#f1f5f9",
-                      color: "#334155",
-                      border: "1px solid #cbd5e1",
-                      borderRadius: "4px",
-                      fontWeight: "500",
-                      textDecoration: "none",
-                    }}
-                  >
-                    View Public Page
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Customer Ratings Section */}
-          <div
-            style={{
-              backgroundColor: "#fff",
-              border: "1px solid #e2e8f0",
-              borderRadius: "8px",
-              padding: "1.75rem",
-              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.05)",
-            }}
-          >
-            <h2 style={{ fontSize: "1.3rem", color: "#0f172a", marginBottom: "1rem" }}>
-              Customer Ratings ({storeRatings.length})
-            </h2>
-
-            {storeRatings.length === 0 ? (
-              <p style={{ color: "#94a3b8", fontStyle: "italic" }}>
-                No customer ratings received yet.
-              </p>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {storeRatings.map((r) => (
-                  <div
-                    key={r.id}
-                    style={{
-                      padding: "1rem",
-                      border: "1px solid #f1f5f9",
-                      borderRadius: "6px",
-                      backgroundColor: "#f8fafc",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
-                      <span style={{ fontWeight: "600", color: "#1e293b" }}>
-                        {r.user?.name || "Customer"}
-                      </span>
-                      <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
-                        {new Date(r.createdAt).toLocaleDateString()}
-                      </span>
+                      <h2 className="text-2xl font-black uppercase tracking-tight text-black mb-1">
+                        {ownerStore.name}
+                      </h2>
+                      <p className="text-xs sm:text-sm font-bold text-black/80 mb-0.5">
+                        📍 {ownerStore.address}
+                      </p>
+                      <p className="text-xs sm:text-sm font-bold text-black/60">
+                        ✉️ {ownerStore.email}
+                      </p>
                     </div>
-                    <div style={{ color: "#d97706", fontSize: "1rem" }}>
-                      {"⭐".repeat(r.value)} <span style={{ color: "#64748b", fontSize: "0.85rem" }}>({r.value}/5)</span>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleStartEdit}
+                        className="btn-neo px-4 py-2 bg-white border-2 border-black font-black text-xs uppercase tracking-wider shadow-[3px_3px_0px_0px_#000] hover:bg-neo-secondary"
+                      >
+                        EDIT DETAILS
+                      </button>
+                      <Link
+                        to={`/stores/${ownerStore.id}`}
+                        className="btn-neo px-4 py-2 bg-neo-secondary border-2 border-black font-black text-xs uppercase tracking-wider shadow-[3px_3px_0px_0px_#000]"
+                      >
+                        VIEW PUBLIC PAGE →
+                      </Link>
                     </div>
                   </div>
-                ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Ratings Table */}
+            <div className="bg-white border-4 border-black p-6 sm:p-8 shadow-[8px_8px_0px_0px_#000]">
+              <div className="flex items-center justify-between mb-6 border-b-4 border-black pb-3">
+                <h2 className="text-xl font-black uppercase tracking-tight text-black">
+                  Recent Customer Ratings
+                </h2>
+                <span className="px-2.5 py-0.5 bg-neo-bg border-2 border-black font-black text-xs uppercase tracking-wider tabular-nums shadow-[2px_2px_0px_0px_#000]">
+                  {storeRatings.length} RECEIVED
+                </span>
               </div>
-            )}
+
+              {storeRatings.length === 0 ? (
+                <div className="text-center py-8 font-bold text-xs uppercase tracking-wider text-black/50">
+                  No customer ratings received yet.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse border-4 border-black">
+                    <thead>
+                      <tr className="bg-neo-secondary border-b-4 border-black text-xs font-black uppercase tracking-wider text-black">
+                        <th className="py-3 px-4">User</th>
+                        <th className="py-3 px-4">Rating</th>
+                        <th className="py-3 px-4 text-right">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y-2 divide-black text-sm font-bold bg-white">
+                      {storeRatings.map((r) => (
+                        <tr key={r.id} className="hover:bg-neo-bg h-14 transition-colors">
+                          <td className="py-3 px-4 font-black uppercase text-black">
+                            {r.user?.name || "Customer"}
+                          </td>
+                          <td className="py-3 px-4">
+                            <StarRating value={r.value} showValue={false} size={16} />
+                          </td>
+                          <td className="py-3 px-4 text-right text-xs font-bold uppercase text-black/60">
+                            {new Date(r.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </main>
     </div>
   );
 };

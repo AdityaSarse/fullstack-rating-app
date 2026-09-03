@@ -27,4 +27,27 @@ api.interceptors.request.use(
   }
 );
 
+// Response interceptor: Global error handling
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // 401: Unauthorized -> remove token from localStorage and redirect to /login
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem("token");
+      if (
+        window.location.pathname !== "/login" &&
+        window.location.pathname !== "/register"
+      ) {
+        window.location.href = "/login";
+      }
+    }
+
+    // 403, 404, 409, 422, 500, and network errors: reject normally without swallowing
+    return Promise.reject(error);
+  }
+);
+
 export default api;
+

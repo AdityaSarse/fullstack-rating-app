@@ -4,9 +4,56 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>StoreRatings — The Neo-brutalist Rating Platform</title>
+
+    <!-- Google Font: Space Grotesk (Weights: 400, 500, 700, 900) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS with Neo-brutalism Design Tokens -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'neo-bg': '#FFFDF5',
+              'neo-ink': '#000000',
+              'neo-accent': '#FF6B6B',
+              'neo-secondary': '#FFD93D',
+              'neo-muted': '#C4B5FD',
+              'neo-white': '#FFFFFF',
+              // backward-compatibility / alias mappings
+              bg: '#FFFDF5',
+              surface: '#FFFFFF',
+              border: { DEFAULT: '#000000', strong: '#000000' },
+              ink: { primary: '#000000', secondary: '#000000', muted: '#57534E' },
+              accent: { DEFAULT: '#FF6B6B', hover: '#E85959', subtle: '#FFD93D' },
+              success: { DEFAULT: '#15803D', subtle: '#F0FDF4' },
+              danger: { DEFAULT: '#DC2626', subtle: '#FEF2F2' },
+              role: {
+                admin: { text: '#000000', bg: '#C4B5FD' },
+                owner: { text: '#000000', bg: '#FFD93D' },
+                user: { text: '#000000', bg: '#FFFDF5' },
+              },
+            },
+            fontFamily: {
+              sans: ['"Space Grotesk"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            },
+            boxShadow: {
+              'neo-sm': '4px 4px 0px 0px #000000',
+              'neo': '8px 8px 0px 0px #000000',
+              'neo-lg': '12px 12px 0px 0px #000000',
+              'neo-xl': '16px 16px 0px 0px #000000',
+              'neo-white': '8px 8px 0px 0px #FFFFFF',
+            },
+          },
+        },
+      }
+    </script>
   </head>
-  <body>
+  <body class="bg-neo-bg text-neo-ink font-sans antialiased min-h-screen selection:bg-neo-secondary selection:text-black">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
