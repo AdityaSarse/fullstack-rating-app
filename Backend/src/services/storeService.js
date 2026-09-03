@@ -144,6 +144,7 @@ async function getAllStores() {
       name: true,
       email: true,
       address: true,
+      ownerId: true,
       ratings: {
         select: {
           value: true,
@@ -174,6 +175,7 @@ async function getAllStores() {
       name: store.name,
       email: store.email,
       address: store.address,
+      ownerId: store.ownerId,
       averageRating,
       ratingCount,
     };
@@ -198,6 +200,7 @@ async function getStoreById(storeId) {
       name: true,
       email: true,
       address: true,
+      ownerId: true,
       ratings: {
         select: {
           value: true,
@@ -230,6 +233,7 @@ async function getStoreById(storeId) {
     name: store.name,
     email: store.email,
     address: store.address,
+    ownerId: store.ownerId,
     averageRating,
     ratingCount,
   };
