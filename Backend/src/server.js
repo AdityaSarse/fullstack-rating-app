@@ -8,6 +8,7 @@ const authRoutes = require("./routes/authRoutes");
 const storeRoutes = require("./routes/storeRoutes");
 const ratingRoutes = require("./routes/ratingRoutes");
 const userRoutes = require("./routes/userRoutes");
+const { errorHandler } = require("./middlewares/errorHandler");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,14 +30,19 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-// ── 404 handler ───────────────────────────────────────────────────────────────
+// ── 404 handler for undefined routes ──────────────────────────────────────────
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: "Route not found." });
 });
+
+// ── Centralized global error handler ──────────────────────────────────────────
+
+app.use(errorHandler);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+

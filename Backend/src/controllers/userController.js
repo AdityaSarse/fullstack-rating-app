@@ -9,7 +9,7 @@ const {
   deleteUser,
 } = require("../services/userService");
 
-async function getAll(_req, res) {
+async function getAll(_req, res, next) {
   try {
     const users = await getAllUsers();
 
@@ -18,16 +18,11 @@ async function getAll(_req, res) {
       data: { users },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-    });
+    return next(error);
   }
 }
 
-async function getById(req, res) {
+async function getById(req, res, next) {
   try {
     const { id } = req.params;
     const user = await getUserById(id);
@@ -37,16 +32,11 @@ async function getById(req, res) {
       data: { user },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-    });
+    return next(error);
   }
 }
 
-async function update(req, res) {
+async function update(req, res, next) {
   try {
     const { id } = req.params;
     const { name, email, address, role } = req.body;
@@ -65,17 +55,11 @@ async function update(req, res) {
       data: { user },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-      ...(error.details && { errors: error.details }),
-    });
+    return next(error);
   }
 }
 
-async function remove(req, res) {
+async function remove(req, res, next) {
   try {
     const { id } = req.params;
 
@@ -87,13 +71,9 @@ async function remove(req, res) {
       data: { user },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-    });
+    return next(error);
   }
 }
 
 module.exports = { getAll, getById, update, remove };
+

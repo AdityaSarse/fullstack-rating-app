@@ -10,7 +10,7 @@
 
 const { registerUser, loginUser, getMe } = require("../services/authService");
 
-async function register(req, res) {
+async function register(req, res, next) {
   try {
     const { name, email, password, address, role } = req.body;
 
@@ -22,17 +22,11 @@ async function register(req, res) {
       data: { user },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-      ...(error.details && { errors: error.details }),
-    });
+    return next(error);
   }
 }
 
-async function login(req, res) {
+async function login(req, res, next) {
   try {
     const { email, password } = req.body;
 
@@ -44,17 +38,11 @@ async function login(req, res) {
       data: result, // { token, user }
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-      ...(error.details && { errors: error.details }),
-    });
+    return next(error);
   }
 }
 
-async function me(req, res) {
+async function me(req, res, next) {
   try {
     // req.user.id comes from the verified JWT — never from user input
     const user = await getMe(req.user.id);
@@ -64,13 +52,9 @@ async function me(req, res) {
       data: { user },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-    });
+    return next(error);
   }
 }
 
 module.exports = { register, login, me };
+

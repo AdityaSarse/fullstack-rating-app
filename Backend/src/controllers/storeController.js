@@ -11,7 +11,7 @@ const {
   deleteStore,
 } = require("../services/storeService");
 
-async function create(req, res) {
+async function create(req, res, next) {
   try {
     const { name, email, address, ownerId } = req.body;
 
@@ -29,17 +29,11 @@ async function create(req, res) {
       data: { store },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-      ...(error.details && { errors: error.details }),
-    });
+    return next(error);
   }
 }
 
-async function getAll(_req, res) {
+async function getAll(_req, res, next) {
   try {
     const stores = await getAllStores();
 
@@ -48,16 +42,11 @@ async function getAll(_req, res) {
       data: { stores },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-    });
+    return next(error);
   }
 }
 
-async function getById(req, res) {
+async function getById(req, res, next) {
   try {
     const { id } = req.params;
     const store = await getStoreById(id);
@@ -67,16 +56,11 @@ async function getById(req, res) {
       data: { store },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-    });
+    return next(error);
   }
 }
 
-async function update(req, res) {
+async function update(req, res, next) {
   try {
     const { id } = req.params;
     const { name, email, address } = req.body;
@@ -95,17 +79,11 @@ async function update(req, res) {
       data: { store },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-      ...(error.details && { errors: error.details }),
-    });
+    return next(error);
   }
 }
 
-async function remove(req, res) {
+async function remove(req, res, next) {
   try {
     const { id } = req.params;
 
@@ -120,13 +98,9 @@ async function remove(req, res) {
       data: { store: result },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-    });
+    return next(error);
   }
 }
 
 module.exports = { create, getAll, getById, update, remove };
+

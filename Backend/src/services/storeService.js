@@ -71,16 +71,18 @@ async function createStore({ name, email, address, requestingUser, ownerId: body
     }
 
   } else if (requestingUser.role === "ADMIN") {
-    // ADMIN: ownerId must be supplied in the request body
-    if (!bodyOwnerId || typeof bodyOwnerId !== "string") {
-      const error = new Error("ownerId is required when an ADMIN creates a store.");
+    // ADMIN: ownerId must be supplied in the request body and be a valid UUID
+    if (!bodyOwnerId || typeof bodyOwnerId !== "string" || !UUID_REGEX.test(bodyOwnerId.trim())) {
+      const error = new Error("ownerId is required and must be a valid UUID.");
       error.statusCode = 422;
       throw error;
     }
 
+    const cleanOwnerId = bodyOwnerId.trim();
+
     // Verify the specified owner exists and has the STORE_OWNER role
     const owner = await prisma.user.findUnique({
-      where: { id: bodyOwnerId },
+      where: { id: cleanOwnerId },
       select: { id: true, role: true },
     });
 
@@ -100,7 +102,7 @@ async function createStore({ name, email, address, requestingUser, ownerId: body
 
     // Check if this owner already has a store
     const existingStore = await prisma.store.findUnique({
-      where: { ownerId: bodyOwnerId },
+      where: { ownerId: cleanOwnerId },
     });
 
     if (existingStore) {
@@ -109,7 +111,7 @@ async function createStore({ name, email, address, requestingUser, ownerId: body
       throw error;
     }
 
-    resolvedOwnerId = bodyOwnerId;
+    resolvedOwnerId = cleanOwnerId;
   }
 
   // 2. Create the store

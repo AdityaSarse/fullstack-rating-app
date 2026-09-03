@@ -8,7 +8,7 @@ const {
   getRatingsForStore,
 } = require("../services/ratingService");
 
-async function submit(req, res) {
+async function submit(req, res, next) {
   try {
     const { storeId, value } = req.body;
 
@@ -24,17 +24,11 @@ async function submit(req, res) {
       data: { rating },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-      ...(error.details && { errors: error.details }),
-    });
+    return next(error);
   }
 }
 
-async function update(req, res) {
+async function update(req, res, next) {
   try {
     const { id } = req.params;
     const { value } = req.body;
@@ -51,17 +45,11 @@ async function update(req, res) {
       data: { rating },
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-      ...(error.details && { errors: error.details }),
-    });
+    return next(error);
   }
 }
 
-async function getStoreRatings(req, res) {
+async function getStoreRatings(req, res, next) {
   try {
     const { storeId } = req.params;
 
@@ -72,13 +60,9 @@ async function getStoreRatings(req, res) {
       data: result,
     });
   } catch (error) {
-    const statusCode = error.statusCode || 500;
-
-    return res.status(statusCode).json({
-      success: false,
-      message: error.message || "An unexpected error occurred.",
-    });
+    return next(error);
   }
 }
 
 module.exports = { submit, update, getStoreRatings };
+
