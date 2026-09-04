@@ -10,7 +10,7 @@ A full-stack store rating and management platform where users can discover store
 
 ## 🚀 Live Demo
 
-🌐 **Frontend:** https://your-vercel-url.vercel.app
+🌐 **Frontend:** https://frontend-seven-livid-55.vercel.app
 
 🔗 **Backend API:** https://fullstack-rating-app.onrender.com
 
@@ -243,7 +243,7 @@ The dashboard provides:
 - Customer ratings
 - Store management options
 
-![Store Owner Dashboard](./assets/store-owner-dashboard.png)
+![Store Owner Dashboard](./assets/store-owner-portal.png)
 
 ---
 
