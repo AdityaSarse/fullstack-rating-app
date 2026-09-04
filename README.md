@@ -1,6 +1,6 @@
 # ⭐ StoreRatings
 
-![StoreRatings Banner](./assets/banner.png)
+![StoreRatings Banner](./assets/github-banner.png.png)
 
 > **RAW, UNFILTERED & TRANSPARENT RATINGS**
 
