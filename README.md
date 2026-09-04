@@ -1,503 +1,403 @@
 # ⭐ StoreRatings
 
-> **Rate Local Stores. Share Truth. Zero Noise.**
+![StoreRatings Banner](./assets/banner.png)
 
-StoreRatings is a full-stack web application that allows customers to discover local stores, submit ratings, and view transparent community feedback.
+> **RAW, UNFILTERED & TRANSPARENT RATINGS**
 
-The platform provides dedicated functionality for **Normal Users, Store Owners, and Administrators**, making it easy to manage stores, ratings, users, and platform activity.
+A full-stack store rating and management platform where users can discover stores, submit ratings, store owners can manage their stores and monitor customer feedback, and administrators can manage the entire platform.
 
 ---
 
 ## 🚀 Live Demo
 
-🔗 **Live Application:** Add your deployed URL here
+🌐 **Frontend:** https://your-vercel-url.vercel.app
+
+🔗 **Backend API:** https://fullstack-rating-app.onrender.com
 
 ---
 
-## 📸 Screenshots
+## 📌 About The Project
 
-### 🏠 Landing Page
+**StoreRatings** is a full-stack web application built to provide a simple and transparent platform for discovering stores and sharing customer ratings.
 
-![StoreRatings Landing Page](./assets/landing-page.png)
+The application supports three different types of users:
 
-### 🔐 Sign In
+- 👤 **Normal Users**
+- 🏪 **Store Owners**
+- 🛡️ **Administrators**
+
+Each role has its own permissions and dashboard.
+
+Normal users can browse stores and submit ratings.
+
+Store owners can create and manage their store and monitor customer ratings.
+
+Administrators can manage users, stores, ratings, and platform data.
+
+The project demonstrates a complete full-stack architecture using React, Node.js, Express, Prisma, and PostgreSQL.
+
+---
+
+# ✨ Features
+
+## 👤 Normal User Features
+
+- User registration
+- Secure login
+- JWT authentication
+- Browse all stores
+- Search stores
+- View store details
+- View average store rating
+- View total rating count
+- Submit a rating from 1–5
+- Update own rating
+- Prevent duplicate ratings
+- View personal rating activity
+- User dashboard
+- Logout
+- Protected routes
+
+---
+
+## 🏪 Store Owner Features
+
+- Store Owner registration
+- Secure login
+- Dedicated Store Owner dashboard
+- Create a store after registration
+- One store per store owner
+- Edit store information
+- View store profile
+- View average rating
+- View total customer ratings
+- View customer rating details
+- Monitor customer feedback
+- Protected owner routes
+- Ownership-based authorization
+
+### New Store Owner Flow
+
+A newly registered `STORE_OWNER` initially has no store.
+
+The dashboard displays:
+
+> **No store found**
+
+and provides:
+
+> **CREATE STORE**
+
+The owner can then create their store using:
+
+- Store Name
+- Store Email
+- Store Address
+
+After successful creation, the dashboard automatically displays the newly created store.
+
+---
+
+## 🛡️ Administrator Features
+
+The administrator has access to the complete platform.
+
+### Admin Dashboard
+
+The Admin Dashboard provides an overview of the platform, including:
+
+- Total users
+- Total store owners
+- Total stores
+- Total ratings
+- Platform statistics
+- User management
+- Store management
+- Rating management
+
+### Admin User Management
+
+Administrators can:
+
+- View all users
+- Search users
+- View user details
+- Update user information
+- Change user roles
+- Delete users
+- Manage `USER` and `STORE_OWNER` accounts
+
+Administrator accounts cannot be deleted through the normal user deletion endpoint.
+
+### Admin Store Management
+
+Administrators can:
+
+- View all stores
+- View store details
+- Create stores
+- Update stores
+- Delete stores
+- Assign stores to store owners
+- View store ratings
+
+### Admin Rating Management
+
+Administrators can:
+
+- View rating information
+- Monitor ratings
+- Manage platform rating data
+
+---
+
+# 📸 Screenshots
+
+The project contains **14 screenshots** demonstrating the complete application UI.
+
+---
+
+## 1. 🏠 Landing Page
+
+The landing page introduces the StoreRatings platform and provides navigation to authentication and store discovery.
+
+![Landing Page](./assets/landing-page.png)
+
+---
+
+## 2. 🔐 Sign In
+
+Users can securely sign into their account using their registered email and password.
 
 ![Sign In](./assets/signin.png)
 
-### 📝 Create Account
+---
+
+## 3. 📝 Create Account
+
+New users can create an account and select their required role.
+
+Supported public roles:
+
+- USER
+- STORE_OWNER
 
 ![Create Account](./assets/create-account.png)
 
-### 🏪 Explore Stores
+---
 
-![Explore Stores](./assets/explore-stores.png)
+## 4. 🏪 Store Directory
 
-### 👤 User Dashboard
+Users can browse available stores and see important information such as:
 
-![User Dashboard](./assets/user-dashboard.png)
+- Store name
+- Location
+- Average rating
+- Number of ratings
 
-### ⭐ Store Details
+![Store Directory](./assets/store-directory.png)
+
+---
+
+## 5. ⭐ Store Details
+
+The store details page displays complete store information and customer ratings.
+
+Users can:
+
+- View store information
+- View average rating
+- View rating count
+- Submit a rating
+- View existing ratings
 
 ![Store Details](./assets/store-details.png)
 
-### 🏢 Store Owner Portal
+---
 
-![Store Owner Portal](./assets/store-owner-portal.png)
+## 6. 👤 User Dashboard
 
-### 📊 Owner Ratings
+The User Dashboard provides users with an overview of their account and rating activity.
 
-![Owner Ratings](./assets/owner-ratings.png)
+![User Dashboard](./assets/user-dashboard.png)
 
 ---
 
-## ✨ Features
+## 7. ⭐ User Rating
 
-### 👤 Normal User
+Users can submit ratings between **1 and 5 stars**.
 
-- Create an account
-- Secure sign in
-- Browse local stores
-- Search stores by name or city
-- View community ratings
-- View total number of ratings
-- Rate stores from **1 to 5 stars**
-- Update an existing rating
-- View rated stores
-- User dashboard
-- Track rating activity
-
-### 🏪 Store Owner
-
-- Dedicated Store Owner Portal
-- Manage store profile
-- Edit store details
-- View overall store rating
-- View total customer ratings
-- View recent customer ratings
-- View individual customer ratings
-- View public store page
-- Monitor customer feedback
-
-### 🛡️ Administrator
-
-- Admin dashboard
-- Manage users
-- Manage stores
-- Manage ratings
-- Role-based access control
-- Search and management functionality
-- Platform monitoring and moderation
+![User Rating](./assets/user-rating.png)
 
 ---
 
-## 🛠️ Tech Stack
+## 8. 🏪 Store Owner Dashboard
 
-### Frontend
+Store owners have a dedicated dashboard for managing their store.
 
-- React.js
-- Vite
-- JavaScript
-- HTML5
-- CSS3
+The dashboard provides:
 
-### Backend
+- Store information
+- Average rating
+- Rating count
+- Customer ratings
+- Store management options
 
-- Node.js
-- Express.js
+![Store Owner Dashboard](./assets/store-owner-dashboard.png)
 
-### Database
+---
 
-- PostgreSQL
-- Prisma ORM
+## 9. ➕ Create Store
 
-### Tools
+New store owners who do not have a store can create one directly from their dashboard.
+
+The form includes:
+
+- Store Name
+- Store Email
+- Store Address
+
+![Create Store](./assets/create-store.png)
+
+---
+
+## 10. 📊 Store Owner Ratings
+
+Store owners can view customer ratings for their store.
+
+![Store Owner Ratings](./assets/store-owner-ratings.png)
+
+---
+
+# 🛡️ Administrator Screens
+
+The application also provides a complete administrative interface.
+
+---
+
+## 11. 🛡️ Admin Dashboard
+
+The Admin Dashboard provides an overview of the complete platform.
+
+It displays important platform statistics and administrative actions.
+
+![Admin Dashboard](./assets/admin-dashboard.png)
+
+---
+
+## 12. 👥 Admin User Management
+
+Administrators can view and manage registered users.
+
+Available information includes:
+
+- User name
+- Email
+- Address
+- Role
+- Account information
+
+![Admin Users](./assets/admin-users.png)
+
+---
+
+## 13. 🏪 Admin Store Management
+
+Administrators can manage all stores registered on the platform.
+
+Available actions include:
+
+- View stores
+- Create stores
+- Update stores
+- Delete stores
+- Manage store ownership
+
+![Admin Stores](./assets/admin-stores.png)
+
+---
+
+## 14. ⭐ Admin Rating Management
+
+Administrators can monitor rating information across the platform.
+
+![Admin Ratings](./assets/admin-ratings.png)
+
+---
+
+# 🛠️ Tech Stack
+
+## Frontend
+
+- **React.js**
+- **Vite**
+- **JavaScript**
+- **Axios**
+- **React Router**
+- **Context API**
+- **CSS**
+
+## Backend
+
+- **Node.js**
+- **Express.js**
+- **JavaScript**
+- **JWT**
+- **bcryptjs**
+
+## Database
+
+- **PostgreSQL**
+- **Prisma ORM**
+
+## Deployment
+
+- **Vercel** — Frontend
+- **Render** — Backend
+- **Neon PostgreSQL** — Database
+
+## Development Tools
 
 - Git
 - GitHub
 - VS Code
 - npm
+- Prisma CLI
 
 ---
 
-## 📁 Project Structure
-
-    fullstack-rating-app/
-    │
-    ├── Backend/
-    │   ├── .agents/
-    │   ├── .claude/
-    │   ├── .cursor/
-    │   ├── .devin/
-    │   ├── node_modules/
-    │   ├── prisma/
-    │   ├── scripts/
-    │   ├── src/
-    │   ├── .env
-    │   ├── .env.example
-    │   ├── package.json
-    │   ├── package-lock.json
-    │   └── prisma.config.ts
-    │
-    ├── Frontend/
-    │   ├── node_modules/
-    │   ├── public/
-    │   ├── src/
-    │   │   ├── components/
-    │   │   ├── context/
-    │   │   ├── hooks/
-    │   │   ├── layouts/
-    │   │   ├── pages/
-    │   │   ├── services/
-    │   │   └── utils/
-    │   │
-    │   ├── app.jsx
-    │   ├── index.css
-    │   ├── main.jsx
-    │   ├── .env
-    │   ├── .gitignore
-    │   ├── eslint.config.js
-    │   ├── index.html
-    │   ├── package.json
-    │   ├── package-lock.json
-    │   └── vite.config.js
-    │
-    ├── assets/
-    │   ├── landing-page.png
-    │   ├── signin.png
-    │   ├── create-account.png
-    │   ├── explore-stores.png
-    │   ├── user-dashboard.png
-    │   ├── store-details.png
-    │   ├── store-owner-portal.png
-    │   └── owner-ratings.png
-    │
-    ├── .gitignore
-    └── README.md
-
-> **Note:** `node_modules` should normally be excluded from Git using `.gitignore`.
-
----
-
-## ⚙️ Installation & Setup
-
-### 1. Clone the Repository
-
-    git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
-
-    cd fullstack-rating-app
-
-### 2. Backend Setup
-
-    cd Backend
-
-Install dependencies:
-
-    npm install
-
-Create the environment file:
-
-    cp .env.example .env
-
-Configure your database connection inside `.env`.
-
-Example:
-
-    DATABASE_URL="your_database_connection_string"
-
-Generate Prisma Client:
-
-    npx prisma generate
-
-Run database migrations if required:
-
-    npx prisma migrate dev
-
-Start the backend:
-
-    npm run dev
-
-### 3. Frontend Setup
-
-Open a new terminal:
-
-    cd Frontend
-
-Install dependencies:
-
-    npm install
-
-Start the frontend:
-
-    npm run dev
-
----
-
-## 🔐 User Roles
-
-| Role | Description |
-|------|-------------|
-| 👤 Normal User | Browse stores and submit or update ratings |
-| 🏪 Store Owner | Manage store information and monitor ratings |
-| 🛡️ Administrator | Manage users, stores, ratings, and platform operations |
-
----
-
-## ⭐ Rating System
-
-Users can rate stores using a **1–5 star rating system**.
-
-    ⭐        1/5
-    ⭐⭐      2/5
-    ⭐⭐⭐    3/5
-    ⭐⭐⭐⭐  4/5
-    ⭐⭐⭐⭐⭐ 5/5
-
-Store ratings are displayed using the community rating data.
-
-Example:
-
-    TECH WORLD
-
-    ⭐ 4.6
-
-    18 Customer Ratings
-
----
-
-## 🔄 Application Flow
-
-    ┌─────────────────────┐
-    │   StoreRatings      │
-    │      Landing        │
-    └──────────┬──────────┘
-               │
-               ▼
-    ┌─────────────────────┐
-    │   Authentication    │
-    └──────────┬──────────┘
-               │
-        ┌──────┼──────┐
-        │      │      │
-        ▼      ▼      ▼
-    ┌──────┐ ┌──────┐ ┌──────┐
-    │ User │ │Owner │ │Admin │
-    └──┬───┘ └──┬───┘ └──┬───┘
-       │        │        │
-       ▼        ▼        ▼
-    Browse   Manage   Manage
-    Stores   Store    Platform
-       │        │        │
-       ▼        ▼        ▼
-     Rate    View     Users
-    Stores   Ratings  Stores
-       │        │     Ratings
-       ▼        ▼        ▼
-     Update  Feedback  Moderation
-     Rating  Insights
-
----
-
-## 🧩 Main Application Sections
-
-### Authentication
-
-- Sign In
-- Create Account
-- Role Selection
-- Password Validation
-
-### Customer
-
-- Store Directory
-- Store Search
-- Store Rating
-- Rating Update
-- User Dashboard
-
-### Store Owner
-
-- Store Owner Portal
-- Store Profile
-- Customer Ratings
-- Store Management
-- Public Store Page
-
-### Administrator
-
-- Admin Dashboard
-- User Management
-- Store Management
-- Rating Management
-- Platform Controls
-
----
-
-## 🎨 UI Design
-
-StoreRatings uses a bold and modern interface inspired by retro editorial and brutalist design principles.
-
-### Design Characteristics
-
-- Bold typography
-- Yellow, coral, purple and white color palette
-- Grid-based background
-- Thick black borders
-- Offset box shadows
-- Card-based layouts
-- Clear navigation
-- Responsive store listings
-- Role indicators
-- Strong visual hierarchy
-
-The main design message is:
-
-> **RAW, UNFILTERED & TRANSPARENT RATINGS**
-
----
-
-## 📊 Example Store
-
-    ┌──────────────────────────────────────┐
-    │ TECH WORLD                           │
-    │                                      │
-    │ 📍 Shop 14, Westend Mall,            │
-    │    Aundh, Pune, Maharashtra          │
-    │                                      │
-    │ ⭐ 4.6                               │
-    │                                      │
-    │ 18 Customer Ratings                  │
-    └──────────────────────────────────────┘
-
----
-
-## 📋 Example Customer Ratings
-
-    RHEA BHUPENDRA RATHOD
-    ⭐⭐⭐☆☆  3.0
-
-    OMKAR SHRIKANT KULKARNI
-    ⭐⭐⭐⭐☆  4.0
-
-    TANVI CHANDRASHEKHAR RANE
-    ⭐⭐⭐⭐☆  4.0
-
-    NIKHIL PRAKASH GOKHALE
-    ⭐⭐⭐⭐☆  4.0
-
-    DEEPIKA MANOHAR TAMBE
-    ⭐⭐⭐⭐☆  4.0
-
----
-
-## 🧠 Key Concepts Demonstrated
-
-This project demonstrates practical implementation of:
-
-- Full-stack application architecture
-- React component architecture
-- Context API
-- Custom React Hooks
-- REST APIs
-- Authentication
-- Authorization
-- Role-Based Access Control
-- CRUD operations
-- Database relationships
-- Prisma ORM
-- PostgreSQL
-- Form validation
-- State management
-- Search functionality
-- Rating aggregation
-- Responsive UI development
-
----
-
-## 🔒 Environment Variables
-
-Never commit sensitive environment variables to GitHub.
-
-The following files should remain local:
-
-    .env
-
-Use `.env.example` to document the required environment variables.
-
-Example:
-
-    DATABASE_URL="your_database_connection_string"
-
----
-
-## 🚫 Git Ignore
-
-Make sure generated and sensitive files are ignored:
-
-    node_modules/
-    .env
-    dist/
-
----
-
-## 🚀 Future Improvements
-
-- Store categories
-- Advanced store filtering
-- Location-based store discovery
-- Pagination
-- Rating analytics
-- Review comments
-- Store owner notifications
-- Admin analytics
-- Email verification
-- Password reset
-- Profile management
-- Improved mobile responsiveness
-- Automated testing
-- CI/CD pipeline
-- Production deployment
-
----
-
-## 🎯 Project Objective
-
-The main objective of StoreRatings is to create a transparent platform where customers can share their experiences with local stores while store owners can monitor genuine customer feedback.
-
-The system connects three major stakeholders:
-
-    CUSTOMERS
-         │
-         │  Submit Ratings
-         ▼
-    STORE RATINGS
-         │
-         ├─────────────────┐
-         │                 │
-         ▼                 ▼
-    STORE OWNER        ADMINISTRATOR
-         │                 │
-         ▼                 ▼
-    View Feedback     Manage Platform
-    Store Insights    Users / Stores
-                      Ratings / Roles
-
----
-
-## 👨‍💻 Author
-
-**Aditya Sarse**
-
-- GitHub: https://github.com/YOUR_USERNAME
-- LinkedIn: https://linkedin.com/in/YOUR_USERNAME
-
----
-
-## ⭐ Support
-
-If you like this project, consider giving the repository a ⭐ on GitHub.
-
----
-
-## 📄 License
-
-This project is developed for educational and development purposes.
+# 🏗️ Application Architecture
+
+The application follows a layered full-stack architecture.
+
+```text
+                         ┌─────────────────────┐
+                         │       FRONTEND      │
+                         │       React.js      │
+                         └──────────┬──────────┘
+                                    │
+                                    │ HTTP / REST API
+                                    ▼
+                         ┌─────────────────────┐
+                         │       BACKEND       │
+                         │ Node.js + Express   │
+                         └──────────┬──────────┘
+                                    │
+                         ┌──────────▼──────────┐
+                         │      Services       │
+                         │                     │
+                         │ authService         │
+                         │ storeService        │
+                         │ ratingService       │
+                         │ userService         │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │    Prisma ORM       │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │ PostgreSQL / Neon   │
+                         └─────────────────────┘
